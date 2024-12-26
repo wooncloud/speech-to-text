@@ -1,11 +1,44 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import { Mic } from "lucide-svelte";
+  import { AudioRecorder } from "$lib/utils/audioRecorder";
+  import { transcribeAudio } from "$lib/utils/openai";
+  import { createEventDispatcher } from "svelte";
 
   export let recording = false;
+  export let isProcessing = false;
+  const dispatch = createEventDispatcher();
+  let audioRecorder = new AudioRecorder();
 
-  function handleClick() {
-    recording = !recording;
+  /**
+   * 녹음 버튼 클릭 시 실행되는 함수입니다.
+   * 녹음 시작/중지 및 음성 인식 처리를 담당합니다.
+   */
+  async function handleClick() {
+    if (isProcessing) return;
+
+    try {
+      if (!recording) {
+        // 녹음 시작
+        await audioRecorder.start();
+        recording = true;
+      } else {
+        // 녹음 중지 및 음성 인식 처리
+        recording = false;
+        isProcessing = true;
+        dispatch('processingStart');
+        
+        const audioBlob = await audioRecorder.stop();
+        const text = await transcribeAudio(audioBlob);
+        dispatch('transcribed', { text });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      dispatch('error', { message: error.message });
+    } finally {
+      isProcessing = false;
+      dispatch('processingEnd');
+    }
   }
 </script>
 
@@ -18,6 +51,7 @@
     before:absolute before:inset-0 before:rounded-full before:animate-ping 
     before:bg-primary/10 before:opacity-75 before:scale-150"
   on:click={handleClick}
+  disabled={isProcessing}
 >
   <div class="relative z-10">
     <Mic
