@@ -8,8 +8,7 @@ export const openai = new OpenAI({
 
 export const transcribeAudio = async (audioBlob) => {
   try {
-    const extension = audioBlob.type === 'audio/mp4' ? 'mp4' : 'webm';
-    const audioFile = new File([audioBlob], `audio.${extension}`, { 
+    const audioFile = new File([audioBlob], `audio.${audioBlob.type.split('/')[1]}`, { 
       type: audioBlob.type 
     });
 
@@ -21,11 +20,7 @@ export const transcribeAudio = async (audioBlob) => {
 
     return response.text;
   } catch (error) {
-    await logToSupabase(
-      LogType.ERROR,
-      LogCode.OPENAI_TRANSCRIBE,
-      `OpenAI 음성 변환 오류: ${error.message}`
-    );
+    await logToSupabase(LogType.ERROR, LogCode.OPENAI_TRANSCRIBE, `변환 오류: ${error.message}`);
     throw new Error('음성을 텍스트로 변환하는 중 오류가 발생했습니다.');
   }
 }; 
