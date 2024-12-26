@@ -7,16 +7,44 @@ export class AudioRecorder {
   }
 
   /**
+   * iOS 기기인지 확인합니다.
+   * @returns {boolean}
+   */
+  isIOS() {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  }
+
+  /**
    * 브라우저가 지원하는 오디오 MIME 타입을 반환합니다.
    * @returns {string} 지원되는 오디오 MIME 타입
    */
   getSupportedMimeType() {
-    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-      return 'audio/webm;codecs=opus';
+    // iOS의 경우 audio/mp4 강제 사용
+    if (this.isIOS()) {
+      return 'audio/mp4';
     }
-    if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-      return 'audio/ogg;codecs=opus';
+
+    // 다른 브라우저의 경우 우선순위대로 체크
+    const mimeTypes = [
+      'audio/mp4',
+      'audio/webm;codecs=opus',
+      'audio/ogg;codecs=opus'
+    ];
+
+    for (const type of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
     }
+
     return 'audio/mp4';
   }
 
@@ -49,15 +77,12 @@ export class AudioRecorder {
    */
   async requestMicrophonePermission() {
     try {
-      // 마이크 지원 여부 확인
       this.checkMediaDevicesSupport();
 
-      // HTTPS 체크
       if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
         throw new Error('음성 녹음은 HTTPS 환경에서만 가능합니다.');
       }
 
-      // iOS Safari 대응
       if (navigator.permissions && navigator.permissions.query) {
         const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
         if (permissionStatus.state === 'denied') {
@@ -65,12 +90,14 @@ export class AudioRecorder {
         }
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        } 
+          autoGainControl: true,
+          sampleRate: 44100,        // 샘플레이트 지정
+          channelCount: 1           // 모노 녹음
+        }
       });
 
       return stream;
@@ -95,10 +122,13 @@ export class AudioRecorder {
       this.audioChunks = [];
 
       this.mediaRecorder.addEventListener('dataavailable', (event) => {
-        this.audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
       });
 
-      this.mediaRecorder.start();
+      // 더 작은 청크로 데이터 수집
+      this.mediaRecorder.start(100);
       
     } catch (error) {
       await logToSupabase(
@@ -106,7 +136,7 @@ export class AudioRecorder {
         LogCode.AUDIO_PERMISSION,
         `마이크 오류: ${error.message}`
       );
-      throw error; // 원본 에러 메시지 전달
+      throw error;
     }
   }
 
@@ -114,7 +144,7 @@ export class AudioRecorder {
     return new Promise((resolve) => {
       this.mediaRecorder.addEventListener('stop', () => {
         const audioBlob = new Blob(this.audioChunks, { 
-          type: this.mediaRecorder.mimeType 
+          type: 'audio/mp4' // 항상 mp4로 통일
         });
         this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
         resolve(audioBlob);
