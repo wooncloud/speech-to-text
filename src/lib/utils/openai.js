@@ -8,7 +8,10 @@ export const openai = new OpenAI({
 
 export const transcribeAudio = async (audioBlob) => {
   try {
-    const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
+    const extension = audioBlob.type === 'audio/mp4' ? 'mp4' : 'webm';
+    const audioFile = new File([audioBlob], `audio.${extension}`, { 
+      type: audioBlob.type 
+    });
 
     const response = await openai.audio.transcriptions.create({
       file: audioFile,
