@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { logToSupabase, LogType, LogCode } from './supabase.js';
 
 export const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -17,7 +18,11 @@ export const transcribeAudio = async (audioBlob) => {
 
     return response.text;
   } catch (error) {
-    console.error('음성 변환 중 오류 발생:', error);
+    await logToSupabase(
+      LogType.ERROR,
+      LogCode.OPENAI_TRANSCRIBE,
+      `OpenAI 음성 변환 오류: ${error.message}`
+    );
     throw new Error('음성을 텍스트로 변환하는 중 오류가 발생했습니다.');
   }
 }; 

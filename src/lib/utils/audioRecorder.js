@@ -1,3 +1,5 @@
+import { logToSupabase, LogType, LogCode } from './supabase.js';
+
 export class AudioRecorder {
   constructor() {
     this.mediaRecorder = null;
@@ -16,7 +18,11 @@ export class AudioRecorder {
 
       this.mediaRecorder.start();
     } catch (error) {
-      console.error('음성 녹음 시작 중 오류 발생:', error);
+      await logToSupabase(
+        LogType.ERROR,
+        LogCode.AUDIO_PERMISSION,
+        `마이크 권한 오류: ${error.message}`
+      );
       throw new Error('마이크 접근 권한이 필요합니다.');
     }
   }

@@ -4,6 +4,7 @@
   import { AudioRecorder } from "$lib/utils/audioRecorder";
   import { transcribeAudio } from "$lib/utils/openai";
   import { createEventDispatcher } from "svelte";
+  import { logToSupabase, LogType, LogCode } from '$lib/utils/supabase';
 
   export let recording = false;
   export let isProcessing = false;

@@ -3,6 +3,7 @@
   import { Textarea } from "$lib/components/ui/textarea";
   import { Card } from "$lib/components/ui/card";
   import Alert from "$lib/components/Alert.svelte";
+  import { logToSupabase, LogType, LogCode } from '$lib/utils/supabase';
   
   let recording = false;
   let isProcessing = false;
@@ -20,10 +21,20 @@
     
     try {
       await navigator.clipboard.writeText(transcribedText);
+      await logToSupabase(
+        LogType.NORMAL,
+        'CLIPBOARD_COPY',
+        '텍스트가 클립보드에 복사됨'
+      );
       alertMessage = "텍스트가 클립보드에 복사되었습니다.";
       alertType = "success";
       alertComponent.showAlert();
     } catch (error) {
+      await logToSupabase(
+        LogType.ERROR,
+        LogCode.CLIPBOARD,
+        `클립보드 복사 오류: ${error.message}`
+      );
       alertMessage = "텍스트 복사에 실패했습니다.";
       alertType = "error";
       alertComponent.showAlert();
@@ -42,7 +53,12 @@
    * 오류 발생 시 알림 메시지를 표시합니다.
    * @param {CustomEvent} event - error 이벤트 객체
    */
-  function handleError(event) {
+  async function handleError(event) {
+    await logToSupabase(
+      LogType.ERROR,
+      LogCode.UNKNOWN,
+      `일반 오류: ${event.detail.message}`
+    );
     alertMessage = event.detail.message;
     alertType = "error";
     alertComponent.showAlert();
