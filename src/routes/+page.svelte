@@ -21,11 +21,6 @@
     
     try {
       await navigator.clipboard.writeText(transcribedText);
-      await logToSupabase(
-        LogType.NORMAL,
-        'CLIPBOARD_COPY',
-        '텍스트가 클립보드에 복사됨'
-      );
       alertMessage = "텍스트가 클립보드에 복사되었습니다.";
       alertType = "success";
       alertComponent.showAlert();
