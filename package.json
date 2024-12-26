@@ -35,8 +35,5 @@
 		"@supabase/supabase-js": "^2.47.10",
 		"lucide-svelte": "^0.469.0",
 		"openai": "^4.77.0"
-	},
-	"engines": {
-		"node": "20.x"
 	}
 }
