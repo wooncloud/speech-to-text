@@ -4,6 +4,7 @@
   import { Card } from "$lib/components/ui/card";
   import Alert from "$lib/components/Alert.svelte";
   import { logToSupabase, LogType, LogCode } from '$lib/utils/supabase';
+  import InstallPWA from "$lib/components/InstallPWA.svelte";
   
   let recording = false;
   let isProcessing = false;
@@ -119,6 +120,8 @@
     </div>
   </main>
 </div>
+
+<InstallPWA />
 
 <style>
   :global(body) {
