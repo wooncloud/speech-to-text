@@ -6,6 +6,13 @@ export class AudioRecorder {
 		this.audioChunks = [];
 	}
 
+	/**
+	 * 현재 기기가 iOS인지 확인합니다.
+	 */
+	isIOS() {
+		return /iPad|iPhone|iPod/i.test(navigator.userAgent);
+	}
+
 	async start() {
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
@@ -16,7 +23,9 @@ export class AudioRecorder {
 				}
 			});
 
-			this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/mp4' });
+			// iOS는 audio/mp4, 다른 브라우저는 audio/webm 사용
+			const mimeType = this.isIOS() ? 'audio/mp4' : 'audio/webm';
+			this.mediaRecorder = new MediaRecorder(stream, { mimeType });
 			this.audioChunks = [];
 
 			this.mediaRecorder.addEventListener('dataavailable', (event) => {
@@ -33,7 +42,7 @@ export class AudioRecorder {
 	stop() {
 		return new Promise((resolve) => {
 			const handleStop = () => {
-				const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp4' });
+				const audioBlob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
 				this.mediaRecorder.stream.getTracks().forEach((track) => track.stop());
 				this.mediaRecorder.removeEventListener('stop', handleStop);
 				resolve(audioBlob);

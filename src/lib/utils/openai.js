@@ -13,9 +13,12 @@ export const openai = new OpenAI({
  */
 export const transcribeAudio = async (audioBlob) => {
 	try {
-		// 모든 플랫폼에서 m4a 확장자와 audio/mp4 타입으로 통일
-		const audioFile = new File([audioBlob], 'audio.m4a', { 
-			type: 'audio/mp4'
+		// iOS는 m4a, 다른 브라우저는 webm 확장자 사용
+		const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+		const extension = isIOS ? 'm4a' : 'webm';
+
+		const audioFile = new File([audioBlob], `audio.${extension}`, { 
+			type: audioBlob.type  // 원본 MIME 타입 유지
 		});
 
 		const response = await openai.audio.transcriptions.create({
