@@ -13,19 +13,11 @@ export const openai = new OpenAI({
  */
 export const transcribeAudio = async (audioBlob) => {
 	try {
-		// MIME 타입에서 기본 타입만 추출
-		const baseType = audioBlob.type.split(';')[0];
-		
-		// iOS에서는 무조건 m4a로 처리
-		const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-		const extension = isIOS ? 'm4a' : 'mp4';
-
-		// Blob 데이터로 File 객체 생성
-		const audioFile = new File([audioBlob], `audio.${extension}`, { 
-			type: 'audio/mp4'  // OpenAI에 보낼 때는 항상 audio/mp4로 통일
+		// 모든 플랫폼에서 m4a 확장자와 audio/mp4 타입으로 통일
+		const audioFile = new File([audioBlob], 'audio.m4a', { 
+			type: 'audio/mp4'
 		});
 
-		// OpenAI Whisper API를 사용하여 음성을 텍스트로 변환
 		const response = await openai.audio.transcriptions.create({
 			file: audioFile,
 			model: 'whisper-1',
@@ -34,12 +26,7 @@ export const transcribeAudio = async (audioBlob) => {
 
 		return response.text;
 	} catch (error) {
-		// 오류 발생 시 Supabase에 로그 기록
-		await logToSupabase(
-			LogType.ERROR,
-			LogCode.OPENAI_TRANSCRIBE,
-			`변환 오류: ${error.message}, MIME: ${audioBlob.type}`
-		);
+		await logToSupabase(LogType.ERROR, LogCode.OPENAI_TRANSCRIBE, `변환 오류: ${error.message}`);
 		throw new Error('음성을 텍스트로 변환하는 중 오류가 발생했습니다.');
 	}
 };
