@@ -13,28 +13,16 @@ export const openai = new OpenAI({
  */
 export const transcribeAudio = async (audioBlob) => {
 	try {
-		// 오디오 MIME 타입에 따른 파일 확장자 매핑
-		const mimeToExt = {
-			'audio/webm': 'webm',
-			'audio/mp4': 'm4a',
-			'audio/mpeg': 'mp3',
-			'audio/ogg': 'ogg',
-			'audio/wav': 'wav'
-		};
-
-		// MIME 타입에서 기본 타입만 추출 (예: "audio/webm;codecs=opus" -> "audio/webm")
+		// MIME 타입에서 기본 타입만 추출
 		const baseType = audioBlob.type.split(';')[0];
-		// MIME 타입에 해당하는 확장자를 가져오거나, 기본값으로 'webm' 사용
-		const extension = mimeToExt[baseType] || 'webm';
-
-		// iOS 기기 여부 확인
+		
+		// iOS에서는 무조건 m4a로 처리
 		const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-		// iOS에서 audio/mp4인 경우 m4a 확장자 사용, 그 외에는 기본 확장자 사용
-		const finalExtension = isIOS && baseType === 'audio/mp4' ? 'm4a' : extension;
+		const extension = isIOS ? 'm4a' : 'mp4';
 
 		// Blob 데이터로 File 객체 생성
-		const audioFile = new File([audioBlob], `audio.${finalExtension}`, {
-			type: baseType
+		const audioFile = new File([audioBlob], `audio.${extension}`, { 
+			type: 'audio/mp4'  // OpenAI에 보낼 때는 항상 audio/mp4로 통일
 		});
 
 		// OpenAI Whisper API를 사용하여 음성을 텍스트로 변환

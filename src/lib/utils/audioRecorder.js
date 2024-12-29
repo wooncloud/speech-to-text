@@ -26,12 +26,16 @@ export class AudioRecorder {
 				audio: {
 					echoCancellation: true,
 					noiseSuppression: true,
-					channelCount: 1
+					channelCount: 1,
+					sampleRate: 44100
 				}
 			});
 
 			const mimeType = this.getSupportedMimeType();
-			this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+			this.mediaRecorder = new MediaRecorder(stream, { 
+				mimeType,
+				audioBitsPerSecond: 128000
+			});
 			this.audioChunks = [];
 
 			this.mediaRecorder.addEventListener('dataavailable', (event) => {
