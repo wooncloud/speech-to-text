@@ -6,36 +6,17 @@ export class AudioRecorder {
 		this.audioChunks = [];
 	}
 
-	/**
-	 * 브라우저가 지원하는 오디오 MIME 타입을 반환합니다.
-	 */
-	getSupportedMimeType() {
-		// iOS에서는 audio/mp4만 안정적으로 지원
-		if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-			return 'audio/mp4';
-		}
-
-		// 다른 브라우저는 우선순위대로 체크
-		const types = ['audio/webm', 'audio/mp4'];
-		return types.find((type) => MediaRecorder.isTypeSupported(type)) || 'audio/mp4';
-	}
-
 	async start() {
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
 					noiseSuppression: true,
-					channelCount: 1,
-					sampleRate: 44100
+					channelCount: 1
 				}
 			});
 
-			const mimeType = this.getSupportedMimeType();
-			this.mediaRecorder = new MediaRecorder(stream, { 
-				mimeType,
-				audioBitsPerSecond: 128000
-			});
+			this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/mp4' });
 			this.audioChunks = [];
 
 			this.mediaRecorder.addEventListener('dataavailable', (event) => {
@@ -52,7 +33,7 @@ export class AudioRecorder {
 	stop() {
 		return new Promise((resolve) => {
 			const handleStop = () => {
-				const audioBlob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType });
+				const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp4' });
 				this.mediaRecorder.stream.getTracks().forEach((track) => track.stop());
 				this.mediaRecorder.removeEventListener('stop', handleStop);
 				resolve(audioBlob);
