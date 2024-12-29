@@ -46,7 +46,7 @@
 <Button
   variant="outline"
   size="icon"
-  class="relative w-24 h-24 md:w-32 md:h-32 rounded-full transition-all duration-300 
+  class="relative w-24 h-24 rounded-full transition-all duration-300 
     shadow-lg hover:shadow-xl active:scale-95 
     {recording ? 'bg-red-500 hover:bg-red-600 border-red-600' : 'bg-primary hover:bg-primary/90'}
     {recording && 'before:absolute before:inset-0 before:rounded-full before:animate-ping before:bg-red-500/10 before:opacity-75 before:scale-150'}"
@@ -55,7 +55,7 @@
 >
   <div class="relative z-10">
     <Mic
-      class="h-8 w-8 md:h-12 md:w-12 
+      class="h-8 w-8 
         {recording ? 'text-white animate-pulse' : 'text-primary-foreground'}"
     />
   </div>

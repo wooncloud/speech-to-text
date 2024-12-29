@@ -5,6 +5,9 @@
   import Alert from "$lib/components/Alert.svelte";
   import { logToSupabase, LogType, LogCode } from '$lib/utils/supabase';
   import InstallPWA from "$lib/components/InstallPWA.svelte";
+  import ModifyButton from "$lib/components/ModifyButton.svelte";
+  import ResetButton from "$lib/components/ResetButton.svelte";
+  import { RotateCcw } from "lucide-svelte";
   
   let recording = false;
   let isProcessing = false;
@@ -13,6 +16,8 @@
   let alertMessage = "";
   let alertType = "error";
   let alertComponent;
+  let modifyRecording = false;
+  let modifyProcessing = false;
 
   /**
    * 텍스트를 클립보드에 복사하고 알림을 표시합니다.
@@ -42,7 +47,16 @@
    * @param {CustomEvent} event - transcribed 이벤트 객체
    */
   function handleTranscribed(event) {
-    transcribedText = event.detail.text;
+    transcribedText = transcribedText 
+      ? transcribedText + '\n' + event.detail.text
+      : event.detail.text;
+  }
+
+  /**
+   * 텍스트를 초기화합니다.
+   */
+  function handleReset() {
+    transcribedText = "";
   }
 
   /**
@@ -72,6 +86,10 @@
       return "말씀해 주세요...";
     }
     return "버튼을 눌러 시작하세요";
+  }
+
+  function handleTextModified(event) {
+    transcribedText = event.detail.text;
   }
 
   $: statusMessage = getStatusMessage();
@@ -108,14 +126,32 @@
     </Card>
 
     <div class="flex flex-col items-center gap-4 pb-safe">
-      <RecordButton 
-        bind:recording 
-        bind:isProcessing
-        on:transcribed={handleTranscribed}
-        on:error={handleError}
-      />
+      <div class="flex items-center justify-between w-full max-w-xl px-4">
+        <RecordButton 
+          bind:recording 
+          bind:isProcessing
+          on:transcribed={handleTranscribed}
+          on:error={handleError}
+        />
+        <ResetButton
+          on:reset={handleReset}
+        />
+        <ModifyButton
+          bind:recording={modifyRecording}
+          bind:isProcessing={modifyProcessing}
+          originalText={transcribedText}
+          on:textModified={handleTextModified}
+          on:error={handleError}
+        />
+      </div>
       <p class="text-sm text-muted-foreground">
-        {statusMessage}
+        {#if modifyRecording}
+          수정 요청 사항을 말씀해주세요...
+        {:else if modifyProcessing}
+          수정 중입니다...
+        {:else}
+          {statusMessage}
+        {/if}
       </p>
     </div>
   </main>

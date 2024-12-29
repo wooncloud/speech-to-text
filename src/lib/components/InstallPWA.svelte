@@ -8,22 +8,36 @@
   let isIOS = false;
   let isStandalone = false;
 
+  // beforeinstallprompt 이벤트 리스너를 스크립트 실행 시점에 등록
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallButton = true;
+      console.log('beforeinstallprompt 이벤트 발생');
+    });
+  }
+  function checkIOS() {
+    return /iPad|iPhone|iPod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function checkStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           window.navigator.standalone;
+  }
+
+  function checkSafari() {
+    return /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+  }
+
   onMount(() => {
-    isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone;
+    isIOS = checkIOS();
+    isStandalone = checkStandalone();
 
     if (isStandalone) return;
 
     if (isIOS) {
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-      showInstallButton = isSafari;
-    } else {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        showInstallButton = true;
-      });
+      showInstallButton = checkSafari();
     }
 
     window.addEventListener('appinstalled', () => {
@@ -31,7 +45,6 @@
       deferredPrompt = null;
     });
 
-    // 5초 후 자동으로 숨기기
     if (showInstallButton) {
       setTimeout(() => {
         showInstallButton = false;
@@ -49,7 +62,7 @@
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       showInstallButton = false;
     }
